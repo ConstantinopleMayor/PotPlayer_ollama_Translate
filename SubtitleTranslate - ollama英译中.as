@@ -39,6 +39,7 @@ string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
 string api_url = "http://127.0.0.1:11434/api/chat"; // 使用本地原生API地址
 string api_url_base = "http://127.0.0.1:11434";
 string context = "";
+bool startup_login = false; // 标记是否为 PotPlayer 启动时的自动登录
 
 // 支持的语言列表
 array<string> LangTable = 
@@ -70,6 +71,14 @@ string ServerLogin(string User, string Pass) {
     selected_model = User.Trim();
     api_key = Pass.Trim();
 
+    // 如果是 PotPlayer 启动时的自动登录，跳过模型验证，直接保存
+    if (startup_login) {
+        startup_login = false; // 重置标志
+        HostSaveString("api_key_ollama", api_key);
+        HostSaveString("selected_model_ollama", selected_model);
+        return "200 ok";
+    }
+    // 用户手动点击确定时，执行完整的模型验证
     array<string> names = GetOllamaModelNames();
 
     // 验证模型名称是否为空或是否为支持的模型
@@ -205,6 +214,7 @@ string Translate(string Text, string &in SrcLang, string &in DstLang) {
 
 // 插件初始化
 void OnInitialize() {
+    startup_login = true; // 标记为 PotPlayer 启动时的自动登录
     HostPrintUTF8("{$CP949=ollama 번역 플러그인이 로드되었습니다.$}{$CP950=ollama 翻譯插件已加載。$}{$CP0=ollama translation plugin loaded.$}\n");
     // 从临时存储中加载模型名称和 API Key（如果已保存），使用新的键名
     api_key = HostLoadString("api_key_ollama", "");
