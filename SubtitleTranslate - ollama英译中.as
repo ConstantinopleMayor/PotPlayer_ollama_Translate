@@ -36,7 +36,7 @@ string DEFAULT_MODEL_NAME = "wangshenzhi/gemma2-9b-chinese-chat:latest";
 string api_key = "";
 string selected_model = DEFAULT_MODEL_NAME; // 默认使用第一个模型
 string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
-string api_url = "http://127.0.0.1:11434/v1/chat/completions"; // 新增本地API地址
+string api_url = "http://127.0.0.1:11434/api/chat"; // 使用本地原生API地址
 string api_url_base = "http://127.0.0.1:11434";
 string context = "";
 
@@ -170,7 +170,7 @@ string Translate(string Text, string &in SrcLang, string &in DstLang) {
     string escapedPrompt = JsonEscape(prompt);
 
     // 构建请求数据
-    string requestData = "{\"model\":\"" + selected_model + "\",\"messages\":[{\"role\":\"user\",\"content\":\"" + escapedPrompt + "\"}]}";
+    string requestData = "{\"model\":\"" + selected_model + "\",\"messages\":[{\"role\":\"user\",\"content\":\"" + escapedPrompt + "\"}],\"stream\":false,\"think\":false}";
     string headers = "Content-Type: application/json";
 
     // 发送请求
@@ -188,9 +188,9 @@ string Translate(string Text, string &in SrcLang, string &in DstLang) {
         return "";
     }
 
-    JsonValue choices = Root["choices"];
-    if (choices.isArray() && choices[0]["message"]["content"].isString()) {
-        string translatedText = choices[0]["message"]["content"].asString();
+    JsonValue message = Root["message"];
+    if (message.isObject() && message["content"].isString()) {
+        string translatedText = message["content"].asString();
         if (DstLang == "fa" || DstLang == "ar" || DstLang == "he") {
             translatedText = UNICODE_RLE + translatedText;
         }
